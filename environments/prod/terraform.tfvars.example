@@ -1,0 +1,17 @@
+subscription_id     = "00000000-0000-0000-0000-000000000000"
+resource_group_name = "ThanhDT03-Lab"
+location            = "japanwest"
+
+project_name = "myapp"
+environment  = "prod"
+
+acr_name                     = "replacewithuniqueacr"
+storage_account_name         = "replacewithuniquestorage"
+key_vault_name               = "replace-with-unique-kv"
+postgres_server_name         = "replace-with-unique-pg"
+front_door_endpoint_name     = "replace-with-unique-fd"
+app_gateway_public_dns_label = "replace-with-unique-appgw"
+
+github_oidc_subjects = {
+  main = "repo:OWNER/REPO:ref:refs/heads/main"
+}

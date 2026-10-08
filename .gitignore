@@ -1,0 +1,30 @@
+# Terraform working directory
+**/.terraform/*
+
+# Local state (this repository intentionally uses local state)
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Plan files
+*.tfplan
+*.plan
+
+# CLI config / local overrides
+.terraformrc
+terraform.rc
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local environment files
+.env
+.env.*
