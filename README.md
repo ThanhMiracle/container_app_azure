@@ -7,7 +7,7 @@ This repository provisions the Azure platform shown in the supplied architecture
 - Azure Container Apps are created by Terraform **before** application CI/CD exists
 - Container Apps initially run a public placeholder image
 - Later CI/CD owns only the deployed application image and Terraform ignores image drift
-- GitHub Actions authenticates to Azure with OIDC through a dedicated user-assigned managed identity that has `AcrPush`
+- GitHub Actions uses separate OIDC identities: the publisher has `AcrPush` on ACR, and the deployer has `Container Apps Contributor` on the frontend/backend apps
 - Frontend and backend Container Apps use separate managed identities with `AcrPull`
 - PostgreSQL `DATABASE_URL` is stored in Azure Key Vault
 - Backend Container App reads `DATABASE_URL` from Key Vault through a Key Vault-backed Container Apps secret
@@ -34,6 +34,7 @@ Application platform:
 - Backend Container App
 - Frontend/backend user-assigned managed identities
 - GitHub OIDC publishing identity with `AcrPush`
+- Separate GitHub OIDC deployment identity with app-scoped deployment permissions
 
 Data and platform services:
 
@@ -73,16 +74,17 @@ lifecycle {
 
 Your future GitHub Actions workflow can therefore update the image without a later `terraform apply` reverting it back to the placeholder.
 
-### 2. GitHub push identity is separate from runtime identities
+### 2. GitHub publishing, deployment, and runtime identities are separate
 
 ```text
 GitHub Actions --OIDC--> GitHub ACR publisher identity --AcrPush--> ACR
+GitHub Actions --OIDC--> GitHub Container App deployer identity --Container Apps Contributor--> Frontend/backend apps
 
 Frontend identity --AcrPull--> ACR
 Backend identity  --AcrPull--> ACR
 ```
 
-No client secret is created for GitHub Actions.
+The deployer has no ACR push permission, and the publisher has no Container App deployment permission. Both identities trust the repository subjects configured in `github_oidc_subjects`. No client secret is created for GitHub Actions.
 
 ### 3. Database URL is stored in Key Vault
 
@@ -160,7 +162,7 @@ Change the GitHub OIDC subject if your application repository is different:
 
 ```hcl
 github_oidc_subjects = {
-  main = "repo:ThanhMiracle/docker:ref:refs/heads/main"
+  master = "repo:Dev-MT10-SI@330316027/VNN-Agent-orchestrator@1374089373:ref:refs/heads/master"
 }
 ```
 
@@ -192,6 +194,7 @@ After apply:
 
 ```bash
 terraform output github_acr_push_client_id
+terraform output github_container_app_deploy_client_id
 terraform output tenant_id
 terraform output subscription_id
 terraform output acr_login_server
@@ -199,11 +202,43 @@ terraform output frontend_container_app_name
 terraform output backend_container_app_name
 ```
 
-Those outputs are enough to wire the future GitHub Actions OIDC login and image deployment. No workflow is included yet.
+Use `github_acr_push_client_id` for image publishing and `github_container_app_deploy_client_id` for app deployment. The existing `AZURE_BUILD_CLIENT_ID` repository variable continues to identify the ACR publisher.
+
+### Deploy an existing image from GitHub Actions
+
+In the application repository, currently `Dev-MT10-SI/VNN-Agent-orchestrator`, configure the Container App deployment job to authenticate using the separate deployment identity. Run the job on `master` to match its federated credential. The existing AKS workflow uses different settings and must be updated separately if you want to migrate it to Container Apps.
+
+In the application repository's **Settings > Secrets and variables > Actions**, configure:
+
+| Kind | GitHub name | Terraform output |
+| --- | --- | --- |
+| Secret | `AZURE_CONTAINER_APP_DEPLOY_CLIENT_ID` | `github_container_app_deploy_client_id` |
+| Secret | `AZURE_TENANT_ID` | `tenant_id` |
+| Secret | `AZURE_SUBSCRIPTION_ID` | `subscription_id` |
+| Variable | `RESOURCE_GROUP` | `resource_group_name` |
+| Variable | `FRONTEND_CONTAINER_APP_NAME` | `frontend_container_app_name` |
+| Variable | `BACKEND_CONTAINER_APP_NAME` | `backend_container_app_name` |
+| Variable | `ACR_LOGIN_SERVER` | `acr_login_server` |
+
+Read values with `terraform output -raw OUTPUT_NAME` from `environments/prod`. No Azure client secret is needed.
+
+The deployment job needs `permissions: { id-token: write, contents: read }` and this login step:
+
+```yaml
+- name: Log in using the Container App deployment identity
+  uses: azure/login@v3
+  with:
+    client-id: ${{ secrets.AZURE_CONTAINER_APP_DEPLOY_CLIENT_ID }}
+    tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+    subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+```
+
+After login, run `az containerapp update --resource-group "$RESOURCE_GROUP" --name "$CONTAINER_APP_NAME" --image "$IMAGE_TO_DEPLOY"`. Supply an existing full ACR image reference, such as `myappprodacrthanhdt03.azurecr.io/backend:COMMIT_SHA`. Use a unique tag or digest for each deployment.
+
+Do not add a GitHub `environment:` to the deployment job without also configuring a matching environment subject in `github_oidc_subjects`.
 
 ## Cost note
 
 `deploy_service_bus = false` by default because private networking for Service Bus uses the Premium tier and can be expensive. The reusable module is included and can be enabled when your application actually needs asynchronous queues.
 
 Azure Firewall, Defender for Cloud pricing configuration, Azure Policy, Management Groups and subscription-level governance are intentionally not created here because they are subscription-scope concerns and this project is designed to work with Resource Group-level ownership.
-

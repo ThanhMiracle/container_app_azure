@@ -19,12 +19,21 @@ output "acr_login_server" {
 }
 
 output "github_acr_push_client_id" {
-  description = "Use this as AZURE_CLIENT_ID in the future GitHub Actions OIDC login."
+  description = "GitHub OIDC client ID for publishing images to ACR."
   value       = module.github_acr_publisher.client_id
 }
 
 output "github_acr_push_identity_name" {
   value = module.github_acr_publisher.name
+}
+
+output "github_container_app_deploy_client_id" {
+  description = "Separate GitHub OIDC client ID for deploying images to the frontend and backend Container Apps."
+  value       = module.github_container_app_deployer.client_id
+}
+
+output "github_container_app_deploy_identity_name" {
+  value = module.github_container_app_deployer.name
 }
 
 output "frontend_container_app_name" {

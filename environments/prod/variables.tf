@@ -100,6 +100,25 @@ variable "github_oidc_issuer" {
   default = "https://token.actions.githubusercontent.com"
 }
 
+variable "github_deploy_oidc_subjects" {
+  type        = map(string)
+  description = "GitHub OIDC subjects for Container Apps deployment."
+  default     = {}
+
+  validation {
+    condition = length(var.github_deploy_oidc_subjects) <= 20 && alltrue([
+      for name, subject in var.github_deploy_oidc_subjects :
+      can(regex("^[A-Za-z0-9][A-Za-z0-9_-]{2,119}$", name)) &&
+      can(regex(
+        "^repo:[A-Za-z0-9_.-]+(@[0-9]+)?/[A-Za-z0-9_.-]+(@[0-9]+)?:(ref:refs/heads/[^*]+|environment:[^*]+)$",
+        subject
+      ))
+    ])
+
+    error_message = "Invalid GitHub deployment OIDC subject."
+  }
+}
+
 variable "container_app_placeholder_image" {
   type    = string
   default = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
@@ -142,7 +161,7 @@ variable "backend_memory" {
 
 variable "backend_container_port" {
   type    = number
-  default = 8080
+  default = 8000
 }
 
 variable "backend_min_replicas" {

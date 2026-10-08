@@ -26,6 +26,14 @@ github_oidc_subjects = {
   master = "repo:Dev-MT10-SI@330316027/VNN-Agent-orchestrator@1374089373:ref:refs/heads/master"
 }
 
+# ==============================================================================
+# GitHub Actions - Container Apps Deployer
+# ==============================================================================
+
+github_deploy_oidc_subjects = {
+  production = "repo:Dev-MT10-SI@330316027/VNN-Agent-orchestrator@1374089373:environment:production"
+}
+
 # Terraform creates the Container Apps now with this public image.
 # Future CI/CD replaces the image and Terraform ignores that image change.
 container_app_placeholder_image = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
@@ -48,3 +56,7 @@ key_vault_allowed_ip_cidrs       = []
 deploy_service_bus         = false
 service_bus_namespace_name = "myapp-prod-sb-thanhdt03"
 service_bus_queue_name     = "jobs"
+
+
+backend_container_port  = 8000
+frontend_container_port = 8080
