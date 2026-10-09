@@ -98,7 +98,7 @@ Inputs are passed explicitly to child modules. A child module does not automatic
 | [data.tf](../environments/prod/data.tf) | Looks up the existing resource group and authenticated Azure client's tenant/object IDs. No resource group is created. |
 | [networking.tf](../environments/prod/networking.tf) | Creates a VNet, Application Gateway subnet, delegated Container Apps subnet, delegated PostgreSQL subnet, private endpoint subnet, and gateway NSG. |
 | [monitoring.tf](../environments/prod/monitoring.tf) | Creates Log Analytics with 30-day retention and workspace-based Application Insights. |
-| [platform.tf](../environments/prod/platform.tf) | Creates Premium ACR, an LRS Storage Account, and optionally a Premium Service Bus namespace and queue. |
+| [platform.tf](../environments/prod/platform.tf) | Creates Premium ACR, an LRS Storage Account and its private application Blob container (`products` by default), and optionally a Premium Service Bus namespace and queue. |
 | [database.tf](../environments/prod/database.tf) | Creates PostgreSQL Flexible Server and a database with a delegated subnet and private DNS. The production module call disables high availability. |
 | [identities.tf](../environments/prod/identities.tf) | Creates separate frontend/backend identities and the GitHub OIDC publisher; assigns ACR, storage, and optional Service Bus roles. |
 | [key-vault.tf](../environments/prod/key-vault.tf) | Creates Key Vault and the `database-url` secret, grants backend secret-read access, and adds a 30-second runtime RBAC propagation wait before app creation. |

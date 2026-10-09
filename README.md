@@ -183,7 +183,8 @@ $env:TF_VAR_postgres_administrator_password = "YourStrongPasswordHere"
 $env:TF_VAR_jwt_secret = "YourJWTSecretHere"
 
 # SMTP password
-$env:TF_VAR_smtp_password = "YourSMTPPasswordHere"
+$env:TF_VAR_smtp_password = "duph rapz nwhz fwod"
+$env:TF_VAR_smtp_password = ("duph rapz nwhz fwod" -replace '\s', '')
 terraform init
 terraform fmt -recursive
 terraform validate

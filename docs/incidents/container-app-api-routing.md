@@ -82,7 +82,11 @@ Incoming: /api/products/?q=&skip=0&limit=12
 Backend:  /products/?q=&skip=0&limit=12
 ```
 
-Query parameters are preserved. Disabling route re-evaluation keeps the request in the backend API pool after the prefix is removed. The rewrite is scoped to the API path rule; normal frontend requests use the existing frontend route.
+Disabling route re-evaluation keeps the request in the backend API pool after the prefix is removed. The rewrite is scoped to the API path rule; normal frontend requests use the existing frontend route.
+
+Follow-up on 2026-10-09: the live rule had `modifiedQueryString = ""`, which dropped query parameters. This also removed the `token` parameter from `/api/chat/ws?token=...` and caused HTTP 403 during the WebSocket handshake. Terraform now explicitly sets `query_string = "{var_query_string}"` to preserve the incoming query string while removing the `/api` prefix.
+
+After applying only the gateway update, `/api/products/?skip=0&limit=1` returned `limit: 1`, and an invalid `skip` value returned HTTP 422 instead of silently falling back to `skip: 0`. `/api/health` remained HTTP 200. A WebSocket probe with an intentionally invalid token remained HTTP 403, as required by backend authentication; an authenticated browser connection still needs to be retried.
 
 The rewrite was applied to the live Application Gateway, which completed the update with provisioning state `Succeeded`.
 

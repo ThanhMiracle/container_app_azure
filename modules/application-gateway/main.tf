@@ -135,8 +135,9 @@ resource "azurerm_application_gateway" "this" {
       }
 
       url {
-        path    = "/{var_uri_path_1}"
-        reroute = false
+        path         = "/{var_uri_path_1}"
+        query_string = "{var_query_string}"
+        reroute      = false
       }
     }
   }

@@ -21,6 +21,12 @@ module "storage" {
   tags                          = local.tags
 }
 
+resource "azurerm_storage_container" "products" {
+  name                  = lookup(var.backend_environment_variables, "AZURE_STORAGE_CONTAINER", "products")
+  storage_account_id    = module.storage.id
+  container_access_type = "private"
+}
+
 module "service_bus" {
   source = "../../modules/service-bus"
   count  = var.deploy_service_bus ? 1 : 0
