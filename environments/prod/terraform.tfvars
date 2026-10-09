@@ -13,9 +13,11 @@ container_apps_subnet_prefixes   = ["10.20.8.0/21"]
 postgres_subnet_prefixes         = ["10.20.4.0/24"]
 private_endpoint_subnet_prefixes = ["10.20.5.0/24"]
 
+
 # Globally unique names. Change any value if Azure reports a name collision.
 acr_name                     = "myappprodacrthanhdt03"
 storage_account_name         = "thanhdzvl2001"
+storage_replication_type     = "LRS"
 key_vault_name               = "myapp-prod-kv-thanhdt03"
 postgres_server_name         = "myapp-prod-pg-thanhdt03"
 front_door_endpoint_name     = "myapp-prod-fd-thanhdt03"

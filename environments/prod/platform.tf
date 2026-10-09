@@ -16,7 +16,7 @@ module "storage" {
   name                          = var.storage_account_name
   location                      = var.location
   resource_group_name           = data.azurerm_resource_group.this.name
-  replication_type              = "LRS"
+  replication_type              = var.storage_replication_type
   public_network_access_enabled = false
   tags                          = local.tags
 }

@@ -274,3 +274,8 @@ variable "smtp_password" {
   type        = string
   sensitive   = true
 }
+
+variable "storage_replication_type" {
+  type    = string
+  default = "LRS"
+}
