@@ -101,3 +101,33 @@ deploy_service_bus         = false
 service_bus_namespace_name = "myapp-prod-sb-thanhdt03"
 service_bus_queue_name     = "jobs"
 
+# Application Gateway: pools, probes, routes, rewrites, scaling, and WAF.
+# See docs/application-gateway.md for additional applications and custom backends.
+app_gateway = {
+  min_capacity = 1
+  max_capacity = 3
+  waf_mode     = "Prevention"
+
+  backends = {
+    frontend = { container_app = "frontend" }
+    backend  = { container_app = "backend", probe = { path = "/health" } }
+  }
+  default_backend = "frontend"
+  routes = [{
+    name             = "backend-api"
+    paths            = ["/api", "/api/*"]
+    backend          = "backend"
+    rewrite_rule_set = "backend-api-prefix"
+  }]
+  rewrite_rule_sets = {
+    backend-api-prefix = [{
+      name          = "remove-api-prefix"
+      rule_sequence = 100
+      conditions = [{
+        variable = "var_uri_path"
+        pattern  = "^/api/(.*)$"
+      }]
+      path = "/{var_uri_path_1}"
+    }]
+  }
+}

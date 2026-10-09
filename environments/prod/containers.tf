@@ -67,6 +67,7 @@ module "frontend" {
 
 
 
+
 module "backend" {
   source = "../../modules/container-app"
 
@@ -87,7 +88,9 @@ module "backend" {
   min_replicas   = var.backend_min_replicas
   max_replicas   = var.backend_max_replicas
 
+  # ==========================================================
   # Regular environment variables
+  # ==========================================================
 
   environment_variables = merge(
     var.backend_environment_variables,
@@ -98,31 +101,38 @@ module "backend" {
       AZURE_STORAGE_ACCOUNT_URL = module.storage.primary_blob_endpoint
       AZURE_CLIENT_ID           = module.backend_identity.client_id
 
-      # Automatically obtained from Azure Front Door
-      CORS_ORIGINS      = local.frontend_public_url
+      # Automatically retrieved from Azure Front Door
+      CORS_ORIGINS       = local.frontend_public_url
       FRONTEND_BASE_URL = local.frontend_public_url
     }
   )
 
-
+  # ==========================================================
   # Azure Key Vault secrets
+  # Use versionless URLs to avoid apply-time version changes
+  # ==========================================================
+
   key_vault_secrets = {
     database-url = {
-      key_vault_secret_id = module.key_vault.secret_ids["database-url"]
+      key_vault_secret_id = "https://${var.key_vault_name}.vault.azure.net/secrets/database-url"
       identity            = module.backend_identity.id
     }
+
     jwt-secret = {
-      key_vault_secret_id = module.key_vault.secret_ids["jwt-secret"]
+      key_vault_secret_id = "https://${var.key_vault_name}.vault.azure.net/secrets/jwt-secret"
       identity            = module.backend_identity.id
     }
 
     smtp-password = {
-      key_vault_secret_id = module.key_vault.secret_ids["smtp-password"]
+      key_vault_secret_id = "https://${var.key_vault_name}.vault.azure.net/secrets/smtp-password"
       identity            = module.backend_identity.id
     }
   }
 
-  # Secret environment variables
+  # ==========================================================
+  # Map Key Vault secrets to container environment variables
+  # ==========================================================
+
   secret_environment_variables = {
     DATABASE_URL  = "database-url"
     JWT_SECRET    = "jwt-secret"
@@ -132,6 +142,7 @@ module "backend" {
   tags = local.tags
 
   depends_on = [
+    module.key_vault,
     time_sleep.runtime_rbac,
     module.container_apps_private_dns,
     module.acr_private_endpoint,
@@ -139,4 +150,5 @@ module "backend" {
     module.storage_blob_private_endpoint
   ]
 }
+
 

@@ -16,7 +16,7 @@ resource "azurerm_web_application_firewall_policy" "this" {
 
   policy_settings {
     enabled                     = true
-    mode                        = "Prevention"
+    mode                        = var.config.waf_mode
     request_body_check          = true
     file_upload_limit_in_mb     = 100
     max_request_body_size_in_kb = 128
@@ -44,8 +44,8 @@ resource "azurerm_application_gateway" "this" {
   }
 
   autoscale_configuration {
-    min_capacity = var.min_capacity
-    max_capacity = var.max_capacity
+    min_capacity = var.config.min_capacity
+    max_capacity = var.config.max_capacity
   }
 
   gateway_ip_configuration {
@@ -63,54 +63,51 @@ resource "azurerm_application_gateway" "this" {
     public_ip_address_id = azurerm_public_ip.this.id
   }
 
-  backend_address_pool {
-    name  = "frontend"
-    fqdns = [var.frontend_backend_fqdn]
+  dynamic "backend_address_pool" {
+    for_each = var.config.backends
+    content {
+      name         = backend_address_pool.key
+      fqdns        = backend_address_pool.value.fqdns
+      ip_addresses = backend_address_pool.value.ip_addresses
+    }
   }
 
-  backend_address_pool {
-    name  = "backend"
-    fqdns = [var.backend_backend_fqdn]
+  dynamic "probe" {
+    for_each = var.config.backends
+    content {
+      name                = probe.key
+      protocol            = probe.value.protocol
+      path                = probe.value.probe.path
+      interval            = probe.value.probe.interval
+      timeout             = probe.value.probe.timeout
+      unhealthy_threshold = probe.value.probe.unhealthy_threshold
+      # DNS backends use their HTTP settings' host. IP-only pools use the
+      # default probe host unless an explicit probe.host is supplied.
+      pick_host_name_from_backend_http_settings = (
+        probe.value.probe.host == null &&
+        (probe.value.host_name != null || length(probe.value.fqdns) > 0)
+      )
+      host = probe.value.probe.host != null ? probe.value.probe.host : (
+        probe.value.host_name != null || length(probe.value.fqdns) > 0 ? null : "127.0.0.1"
+      )
+    }
   }
 
-  probe {
-    name                                      = "frontend"
-    protocol                                  = "Https"
-    path                                      = var.frontend_probe_path
-    interval                                  = 30
-    timeout                                   = 30
-    unhealthy_threshold                       = 3
-    pick_host_name_from_backend_http_settings = true
-  }
-
-  probe {
-    name                                      = "backend"
-    protocol                                  = "Https"
-    path                                      = var.backend_probe_path
-    interval                                  = 30
-    timeout                                   = 30
-    unhealthy_threshold                       = 3
-    pick_host_name_from_backend_http_settings = true
-  }
-
-  backend_http_settings {
-    name                                = "frontend"
-    cookie_based_affinity               = "Disabled"
-    port                                = 443
-    protocol                            = "Https"
-    request_timeout                     = 30
-    pick_host_name_from_backend_address = true
-    probe_name                          = "frontend"
-  }
-
-  backend_http_settings {
-    name                                = "backend"
-    cookie_based_affinity               = "Disabled"
-    port                                = 443
-    protocol                            = "Https"
-    request_timeout                     = 30
-    pick_host_name_from_backend_address = true
-    probe_name                          = "backend"
+  dynamic "backend_http_settings" {
+    for_each = var.config.backends
+    content {
+      name                  = backend_http_settings.key
+      cookie_based_affinity = backend_http_settings.value.cookie_based_affinity
+      port                  = backend_http_settings.value.port
+      protocol              = backend_http_settings.value.protocol
+      request_timeout       = backend_http_settings.value.request_timeout
+      host_name             = backend_http_settings.value.host_name
+      pick_host_name_from_backend_address = (
+        backend_http_settings.value.host_name == null &&
+        length(backend_http_settings.value.fqdns) > 0
+      )
+      probe_name = backend_http_settings.key
+    }
   }
 
   http_listener {
@@ -120,47 +117,66 @@ resource "azurerm_application_gateway" "this" {
     protocol                       = "Http"
   }
 
-  rewrite_rule_set {
-    name = "backend-api-prefix"
+  dynamic "rewrite_rule_set" {
+    for_each = var.config.rewrite_rule_sets
+    content {
+      name = rewrite_rule_set.key
 
-    rewrite_rule {
-      name          = "remove-api-prefix"
-      rule_sequence = 100
+      dynamic "rewrite_rule" {
+        for_each = rewrite_rule_set.value
+        content {
+          name          = rewrite_rule.value.name
+          rule_sequence = rewrite_rule.value.rule_sequence
 
-      condition {
-        variable    = "var_uri_path"
-        pattern     = "^/api/(.*)$"
-        ignore_case = false
-        negate      = false
-      }
+          dynamic "condition" {
+            for_each = rewrite_rule.value.conditions
+            content {
+              variable    = condition.value.variable
+              pattern     = condition.value.pattern
+              ignore_case = condition.value.ignore_case
+              negate      = condition.value.negate
+            }
+          }
 
-      url {
-        path         = "/{var_uri_path_1}"
-        query_string = "{var_query_string}"
-        reroute      = false
+          url {
+            path         = rewrite_rule.value.path
+            query_string = rewrite_rule.value.query_string
+            reroute      = rewrite_rule.value.reroute
+          }
+        }
       }
     }
   }
 
-  url_path_map {
-    name                               = "application-routes"
-    default_backend_address_pool_name  = "frontend"
-    default_backend_http_settings_name = "frontend"
+  dynamic "url_path_map" {
+    for_each = length(var.config.routes) > 0 ? [var.config.routes] : []
+    content {
+      name                               = "application-routes"
+      default_backend_address_pool_name  = var.config.default_backend
+      default_backend_http_settings_name = var.config.default_backend
+      default_rewrite_rule_set_name      = var.config.default_rewrite_rule_set
 
-    path_rule {
-      name                       = "backend-api"
-      paths                      = ["/api", "/api/*"]
-      backend_address_pool_name  = "backend"
-      backend_http_settings_name = "backend"
-      rewrite_rule_set_name      = "backend-api-prefix"
+      dynamic "path_rule" {
+        for_each = url_path_map.value
+        content {
+          name                       = path_rule.value.name
+          paths                      = path_rule.value.paths
+          backend_address_pool_name  = path_rule.value.backend
+          backend_http_settings_name = path_rule.value.backend
+          rewrite_rule_set_name      = path_rule.value.rewrite_rule_set
+        }
+      }
     }
   }
 
   request_routing_rule {
-    name               = "application"
-    rule_type          = "PathBasedRouting"
-    http_listener_name = "http"
-    url_path_map_name  = "application-routes"
-    priority           = 100
+    name                       = "application"
+    rule_type                  = length(var.config.routes) > 0 ? "PathBasedRouting" : "Basic"
+    http_listener_name         = "http"
+    url_path_map_name          = length(var.config.routes) > 0 ? "application-routes" : null
+    backend_address_pool_name  = length(var.config.routes) > 0 ? null : var.config.default_backend
+    backend_http_settings_name = length(var.config.routes) > 0 ? null : var.config.default_backend
+    rewrite_rule_set_name      = length(var.config.routes) > 0 ? null : var.config.default_rewrite_rule_set
+    priority                   = var.config.routing_priority
   }
 }

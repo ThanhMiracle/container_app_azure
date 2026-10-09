@@ -92,6 +92,7 @@ Inputs are passed explicitly to child modules. A child module does not automatic
 | [versions.tf](../environments/prod/versions.tf) | Requires Terraform `>= 1.8.0`, AzureRM `~> 4.0`, Random `~> 3.6`, and Time `~> 0.13`. No remote backend is configured. |
 | [providers.tf](../environments/prod/providers.tf) | Configures AzureRM with the subscription input, disables automatic resource-provider registration, and sets Key Vault recovery/purge behavior. |
 | [variables.tf](../environments/prod/variables.tf) | Defines subscription, resource names, network ranges, OIDC subjects, app sizing, database settings, and optional Service Bus inputs. |
+| [gateway-variables.tf](../environments/prod/gateway-variables.tf) | Defines and validates the `app_gateway` object for backends, routes, probes, rewrites, autoscaling, and WAF mode. |
 | [terraform.tfvars](../environments/prod/terraform.tfvars) | Supplies deployment-specific values. Terraform automatically loads it when run in this directory. |
 | [terraform.tfvars.example](../environments/prod/terraform.tfvars.example) | A template with placeholder subscription/resource names. Terraform does not automatically load this example file. |
 | [locals.tf](../environments/prod/locals.tf) | Builds the project/environment naming prefix, merges tags, and constructs the PostgreSQL connection URL. |
@@ -207,7 +208,7 @@ For bootstrap networking choices, including public ACR access and Key Vault ACLs
 | Change GitHub repository/branch/environment trust | `github_oidc_subjects` in `terraform.tfvars`. |
 | Change runtime permissions | `identities.tf`, or `key-vault.tf` for backend secret-read access. |
 | Enable Service Bus | Set `deploy_service_bus = true` and a namespace name in `terraform.tfvars`; inspect `platform.tf`, `private-endpoints.tf`, and `identities.tf`. |
-| Change API routing or gateway probes | `modules/application-gateway/main.tf`; environment-supplied probe paths are in `edge.tf`. |
+| Change application routing or gateway probes | `app_gateway` in `environments/prod/terraform.tfvars`; schema in `gateway-variables.tf`, wiring in `edge.tf`. See [gateway configuration](application-gateway.md). |
 | Change Front Door forwarding, WAF, or routes | `modules/front-door/main.tf`. |
 | Expose another deployment value | Add a root output in `environments/prod/outputs.tf`; add a child-module output first if needed. |
 | Add another environment | Create a separate directory under `environments/`, reuse `modules/`, and give it separate inputs and state. Only `prod` exists today. |

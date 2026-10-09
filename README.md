@@ -172,6 +172,8 @@ For GitHub Environments you can instead use a subject such as:
 repo:OWNER/REPO:environment:production
 ```
 
+Gateway backends, health probes, path routes, URL rewrites, autoscaling, and WAF mode are configured through the `app_gateway` object in `terraform.tfvars`. See [Application Gateway configuration](docs/application-gateway.md) for examples, including adding another application and using a single backend.
+
 ## Deploy
 
 From PowerShell or WSL:
