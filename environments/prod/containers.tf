@@ -26,6 +26,7 @@ module "container_apps_private_dns" {
   tags = local.tags
 }
 
+
 module "frontend" {
   source = "../../modules/container-app"
 
@@ -46,10 +47,14 @@ module "frontend" {
   min_replicas   = var.frontend_min_replicas
   max_replicas   = var.frontend_max_replicas
 
-  environment_variables = {
-    API_BASE_URL                          = "/api"
-    APPLICATIONINSIGHTS_CONNECTION_STRING = module.application_insights.connection_string
-  }
+  # Environment variables from terraform.tfvars
+  # Azure-generated variables remain managed by Terraform.
+  environment_variables = merge(
+    var.frontend_environment_variables,
+    {
+      APPLICATIONINSIGHTS_CONNECTION_STRING = module.application_insights.connection_string
+    }
+  )
 
   tags = local.tags
 
@@ -59,6 +64,8 @@ module "frontend" {
     module.acr_private_endpoint
   ]
 }
+
+
 
 module "backend" {
   source = "../../modules/container-app"
@@ -80,20 +87,46 @@ module "backend" {
   min_replicas   = var.backend_min_replicas
   max_replicas   = var.backend_max_replicas
 
-  environment_variables = {
-    APPLICATIONINSIGHTS_CONNECTION_STRING = module.application_insights.connection_string
-    STORAGE_BLOB_ENDPOINT                 = module.storage.primary_blob_endpoint
-  }
+  # Regular environment variables
 
+  environment_variables = merge(
+    var.backend_environment_variables,
+    {
+      APPLICATIONINSIGHTS_CONNECTION_STRING = module.application_insights.connection_string
+
+      STORAGE_BLOB_ENDPOINT     = module.storage.primary_blob_endpoint
+      AZURE_STORAGE_ACCOUNT_URL = module.storage.primary_blob_endpoint
+      AZURE_CLIENT_ID           = module.backend_identity.client_id
+
+      # Automatically obtained from Azure Front Door
+      CORS_ORIGINS      = local.frontend_public_url
+      FRONTEND_BASE_URL = local.frontend_public_url
+    }
+  )
+
+
+  # Azure Key Vault secrets
   key_vault_secrets = {
     database-url = {
       key_vault_secret_id = module.key_vault.secret_ids["database-url"]
       identity            = module.backend_identity.id
     }
+    jwt-secret = {
+      key_vault_secret_id = module.key_vault.secret_ids["jwt-secret"]
+      identity            = module.backend_identity.id
+    }
+
+    smtp-password = {
+      key_vault_secret_id = module.key_vault.secret_ids["smtp-password"]
+      identity            = module.backend_identity.id
+    }
   }
 
+  # Secret environment variables
   secret_environment_variables = {
-    DATABASE_URL = "database-url"
+    DATABASE_URL  = "database-url"
+    JWT_SECRET    = "jwt-secret"
+    SMTP_PASSWORD = "smtp-password"
   }
 
   tags = local.tags
@@ -106,3 +139,4 @@ module "backend" {
     module.storage_blob_private_endpoint
   ]
 }
+

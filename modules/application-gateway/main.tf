@@ -120,6 +120,27 @@ resource "azurerm_application_gateway" "this" {
     protocol                       = "Http"
   }
 
+  rewrite_rule_set {
+    name = "backend-api-prefix"
+
+    rewrite_rule {
+      name          = "remove-api-prefix"
+      rule_sequence = 100
+
+      condition {
+        variable    = "var_uri_path"
+        pattern     = "^/api/(.*)$"
+        ignore_case = false
+        negate      = false
+      }
+
+      url {
+        path    = "/{var_uri_path_1}"
+        reroute = false
+      }
+    }
+  }
+
   url_path_map {
     name                               = "application-routes"
     default_backend_address_pool_name  = "frontend"
@@ -130,6 +151,7 @@ resource "azurerm_application_gateway" "this" {
       paths                      = ["/api", "/api/*"]
       backend_address_pool_name  = "backend"
       backend_http_settings_name = "backend"
+      rewrite_rule_set_name      = "backend-api-prefix"
     }
   }
 

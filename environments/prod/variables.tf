@@ -252,3 +252,25 @@ variable "service_bus_queue_name" {
   type    = string
   default = "jobs"
 }
+
+variable "frontend_environment_variables" {
+  type    = map(string)
+  default = {}
+}
+
+variable "backend_environment_variables" {
+  type    = map(string)
+  default = {}
+}
+
+variable "jwt_secret" {
+  description = "JWT signing secret"
+  type        = string
+  sensitive   = true
+}
+
+variable "smtp_password" {
+  description = "SMTP authentication password"
+  type        = string
+  sensitive   = true
+}

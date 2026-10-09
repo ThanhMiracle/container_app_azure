@@ -38,6 +38,50 @@ github_deploy_oidc_subjects = {
 # Future CI/CD replaces the image and Terraform ignores that image change.
 container_app_placeholder_image = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
 
+# container_app_port
+backend_container_port  = 8000
+frontend_container_port = 8080
+
+
+# ============================================================
+# FRONTEND ENVIRONMENT VARIABLES
+# ============================================================
+
+frontend_environment_variables = {
+  API_BASE = "/api"
+}
+
+
+# ============================================================
+# BACKEND ENVIRONMENT VARIABLES
+# ============================================================
+
+backend_environment_variables = {
+
+  # Authentication
+  JWT_EXPIRE_MINUTES        = "60"
+  LOGIN_RATE_LIMIT          = "5"
+  LOGIN_RATE_WINDOW_SECONDS = "60"
+
+  # Admin
+  ADMIN_EMAIL = "admin@example.com"
+
+  # SMTP Configuration
+  SMTP_HOST     = "smtp.gmail.com"
+  SMTP_PORT     = "587"
+  SMTP_USERNAME = "dtthanh2909@gmail.com"
+  SMTP_FROM     = "dtthanh2909@gmail.com"
+  SMTP_USE_TLS  = "true"
+
+  # Azure Blob Storage
+  STORAGE_BACKEND                     = "azure"
+  AZURE_STORAGE_CONTAINER             = "products"
+  AZURE_STORAGE_AUTO_CREATE_CONTAINER = "false"
+  AZURE_BLOB_PROXY_URL                = "/api/files/images"
+}
+
+
+
 # PostgreSQL
 postgres_database_name                = "appdb"
 postgres_admin_username               = "pgadminuser"
@@ -57,6 +101,3 @@ deploy_service_bus         = false
 service_bus_namespace_name = "myapp-prod-sb-thanhdt03"
 service_bus_queue_name     = "jobs"
 
-
-backend_container_port  = 8000
-frontend_container_port = 8080

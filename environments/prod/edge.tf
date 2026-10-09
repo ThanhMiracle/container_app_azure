@@ -10,7 +10,7 @@ module "application_gateway" {
   frontend_backend_fqdn = module.frontend.fqdn
   backend_backend_fqdn  = module.backend.fqdn
   frontend_probe_path   = "/"
-  backend_probe_path    = "/"
+  backend_probe_path    = "/health"
   min_capacity          = 1
   max_capacity          = 3
   tags                  = local.tags

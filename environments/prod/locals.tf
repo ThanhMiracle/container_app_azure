@@ -9,6 +9,6 @@ locals {
     },
     var.tags
   )
-
-  database_url = "postgresql://${var.postgres_admin_username}:${module.postgresql.admin_password}@${module.postgresql.fqdn}:5432/${var.postgres_database_name}?sslmode=require"
+  frontend_public_url = "https://${module.front_door.endpoint_hostname}"
+  database_url        = "postgresql://${var.postgres_admin_username}:${module.postgresql.admin_password}@${module.postgresql.fqdn}:5432/${var.postgres_database_name}?sslmode=require"
 }

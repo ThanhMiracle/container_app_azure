@@ -13,7 +13,9 @@ module "key_vault" {
   purge_protection_enabled      = false
 
   secrets = {
-    database-url = local.database_url
+    database-url  = local.database_url
+    jwt-secret    = var.jwt_secret
+    smtp-password = var.smtp_password
   }
 
   tags = local.tags

@@ -179,6 +179,11 @@ From PowerShell or WSL:
 ```bash
 cd environments/prod
 $env:TF_VAR_postgres_administrator_password = "YourStrongPasswordHere"
+# JWT signing secret
+$env:TF_VAR_jwt_secret = "YourJWTSecretHere"
+
+# SMTP password
+$env:TF_VAR_smtp_password = "YourSMTPPasswordHere"
 terraform init
 terraform fmt -recursive
 terraform validate
