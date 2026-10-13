@@ -83,3 +83,11 @@ output "postgres_database_name" {
 output "storage_blob_endpoint" {
   value = module.storage.primary_blob_endpoint
 }
+
+output "log_analytics_workspace_id" { value = module.log_analytics.id }
+output "application_insights_id" { value = module.application_insights.id }
+output "monitor_action_group_id" { value = module.azure_monitor.action_group_id }
+output "monitor_metric_alert_ids" { value = module.azure_monitor.metric_alert_ids }
+output "monitor_availability_test_ids" { value = module.azure_monitor.availability_test_ids }
+output "monitor_availability_alert_ids" { value = module.azure_monitor.availability_alert_ids }
+output "monitor_resource_health_alert_id" { value = module.azure_monitor.resource_health_alert_id }

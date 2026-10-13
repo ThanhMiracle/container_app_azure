@@ -6,6 +6,11 @@ location            = "japanwest"
 project_name = "myapp"
 environment  = "prod"
 
+# Azure Monitor alert notifications and public HTTPS availability checks.
+monitor_alert_email_addresses      = ["dtthanh2909@gmail.com"]
+monitor_alerts_enabled             = true
+monitor_availability_tests_enabled = true
+
 # Networking
 vnet_address_space               = ["10.20.0.0/16"]
 app_gateway_subnet_prefixes      = ["10.20.1.0/24"]

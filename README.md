@@ -51,6 +51,11 @@ Monitoring:
 - Application Insights
 - Container Apps Environment logs sent to Log Analytics
 - Application Insights connection string injected into both apps
+- Azure Monitor email alerts for app replicas/errors, gateway health, PostgreSQL capacity, Front Door failures, and Resource Health
+- Diagnostic logs for gateway, Front Door, PostgreSQL, Key Vault, Blob Storage, ACR, and optional Service Bus
+- Standard HTTPS availability tests for the frontend and backend through Front Door
+
+See [Azure Monitor configuration](docs/azure-monitor.md) for thresholds, notifications, deployment, and log queries.
 
 ## Important design choices
 

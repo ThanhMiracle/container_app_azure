@@ -12,6 +12,7 @@ terraform-azure-production/
 |-- .gitignore                        # Excludes state, working files, and some plan files
 |-- docs/
 |   |-- architecture.md               # Azure resource layout and CI/CD ownership
+|   |-- azure-monitor.md              # Alerts, diagnostics, availability checks, and log queries
 |   `-- repository-structure.md       # This guide
 |-- environments/
 |   `-- prod/                         # The only environment currently defined
@@ -24,7 +25,8 @@ terraform-azure-production/
 |       |-- locals.tf                 # Shared naming, tags, and database URL
 |       |-- data.tf                   # Existing resource group and current Azure identity
 |       |-- networking.tf             # VNet, four subnets, and gateway NSG
-|       |-- monitoring.tf             # Log Analytics and Application Insights
+|       |-- monitoring.tf             # Log Analytics, Application Insights, and Azure Monitor
+|       |-- monitoring-variables.tf   # Alert recipients, switches, and thresholds
 |       |-- platform.tf               # ACR, storage, and optional Service Bus
 |       |-- database.tf               # PostgreSQL and its private DNS zone
 |       |-- identities.tf             # Runtime/GitHub identities and role assignments
@@ -36,6 +38,7 @@ terraform-azure-production/
 `-- modules/
     |-- application-gateway/
     |-- application-insights/
+    |-- azure-monitor/
     |-- container-app/
     |-- container-app-environment/
     |-- container-registry/
@@ -98,7 +101,7 @@ Inputs are passed explicitly to child modules. A child module does not automatic
 | [locals.tf](../environments/prod/locals.tf) | Builds the project/environment naming prefix, merges tags, and constructs the PostgreSQL connection URL. |
 | [data.tf](../environments/prod/data.tf) | Looks up the existing resource group and authenticated Azure client's tenant/object IDs. No resource group is created. |
 | [networking.tf](../environments/prod/networking.tf) | Creates a VNet, Application Gateway subnet, delegated Container Apps subnet, delegated PostgreSQL subnet, private endpoint subnet, and gateway NSG. |
-| [monitoring.tf](../environments/prod/monitoring.tf) | Creates Log Analytics with 30-day retention and workspace-based Application Insights. |
+| [monitoring.tf](../environments/prod/monitoring.tf) | Creates Log Analytics with 30-day retention, workspace-based Application Insights, alerts, diagnostics, and public availability tests. |
 | [platform.tf](../environments/prod/platform.tf) | Creates Premium ACR, an LRS Storage Account and its private application Blob container (`products` by default), and optionally a Premium Service Bus namespace and queue. |
 | [database.tf](../environments/prod/database.tf) | Creates PostgreSQL Flexible Server and a database with a delegated subnet and private DNS. The production module call disables high availability. |
 | [identities.tf](../environments/prod/identities.tf) | Creates separate frontend/backend identities and the GitHub OIDC publisher; assigns ACR, storage, and optional Service Bus roles. |
@@ -130,6 +133,7 @@ Read `variables.tf` for the interface, `main.tf` for behavior, and `outputs.tf` 
 | `private-endpoint` | A private endpoint with a private DNS zone group. |
 | `log-analytics` | A logging workspace. |
 | `application-insights` | Application Insights linked to a workspace. |
+| `azure-monitor` | Email action group, metric and Resource Health alerts, diagnostics, and Standard availability tests. |
 | `container-registry` | ACR with admin credentials disabled. |
 | `storage-account` | StorageV2 with Blob versioning/retention, shared-key access disabled, and OAuth preferred. Does not create Blob containers. |
 | `service-bus` | A Premium namespace and queue, with local authentication and public access disabled. |
