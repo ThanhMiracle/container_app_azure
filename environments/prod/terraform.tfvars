@@ -44,6 +44,17 @@ container_app_placeholder_image = "mcr.microsoft.com/azuredocs/containerapps-hel
 backend_container_port  = 8000
 frontend_container_port = 8080
 
+# Container Apps HA: keep replicas available across multiple zones.
+frontend_min_replicas = 2
+frontend_max_replicas = 3
+backend_min_replicas  = 2
+backend_max_replicas  = 5
+
+# Probes use TCP on each app's container port by default. Once the deployed
+# images expose these endpoints, enable HTTP application checks, for example:
+# frontend_health_probe_paths = { readiness = "/", liveness = "/" }
+# backend_health_probe_paths  = { readiness = "/health", liveness = "/health" }
+
 
 # ============================================================
 # FRONTEND ENVIRONMENT VARIABLES
@@ -93,6 +104,9 @@ postgres_storage_mb                   = 32768
 postgres_backup_retention_days        = 14
 postgres_geo_redundant_backup_enabled = false
 
+# PostgreSQL High Availability
+postgres_high_availability_mode = "SameZone"
+
 # Keep Allow while applying from your workstation because Terraform creates and reads
 # the database-url Key Vault secret through the data plane.
 key_vault_network_default_action = "Allow"
@@ -133,3 +147,8 @@ app_gateway = {
     }]
   }
 }
+
+
+# Application Gateway High Availability
+app_gateway_autoscale_min_capacity = 2
+app_gateway_autoscale_max_capacity = 10

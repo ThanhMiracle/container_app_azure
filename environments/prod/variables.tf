@@ -141,7 +141,12 @@ variable "frontend_container_port" {
 
 variable "frontend_min_replicas" {
   type    = number
-  default = 1
+  default = 2
+
+  validation {
+    condition     = var.frontend_min_replicas >= 2 && floor(var.frontend_min_replicas) == var.frontend_min_replicas
+    error_message = "Frontend HA requires an integer minimum replica count of at least 2."
+  }
 }
 
 variable "frontend_max_replicas" {
@@ -166,12 +171,37 @@ variable "backend_container_port" {
 
 variable "backend_min_replicas" {
   type    = number
-  default = 1
+  default = 2
+
+  validation {
+    condition     = var.backend_min_replicas >= 2 && floor(var.backend_min_replicas) == var.backend_min_replicas
+    error_message = "Backend HA requires an integer minimum replica count of at least 2."
+  }
 }
 
 variable "backend_max_replicas" {
   type    = number
   default = 5
+}
+
+variable "frontend_health_probe_paths" {
+  description = "Optional HTTP paths for frontend probes. Omitted paths use TCP on the container port."
+  type = object({
+    startup   = optional(string)
+    readiness = optional(string)
+    liveness  = optional(string)
+  })
+  default = {}
+}
+
+variable "backend_health_probe_paths" {
+  description = "Optional HTTP paths for backend probes. Omitted paths use TCP on the container port."
+  type = object({
+    startup   = optional(string)
+    readiness = optional(string)
+    liveness  = optional(string)
+  })
+  default = {}
 }
 
 variable "postgres_administrator_password" {
@@ -278,4 +308,21 @@ variable "smtp_password" {
 variable "storage_replication_type" {
   type    = string
   default = "LRS"
+}
+
+variable "postgres_high_availability_mode" {
+  description = "PostgreSQL HA mode: SameZone, ZoneRedundant, or null to disable HA."
+  type        = string
+  default     = null
+
+  validation {
+    condition = (
+      var.postgres_high_availability_mode == null ||
+      contains(
+        ["SameZone", "ZoneRedundant"],
+        var.postgres_high_availability_mode
+      )
+    )
+    error_message = "Must be SameZone, ZoneRedundant, or null."
+  }
 }

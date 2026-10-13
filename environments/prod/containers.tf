@@ -7,7 +7,7 @@ module "container_apps_environment" {
   infrastructure_subnet_id       = module.container_apps_subnet.id
   internal_load_balancer_enabled = true
   log_analytics_workspace_id     = module.log_analytics.id
-  zone_redundancy_enabled        = false
+  zone_redundancy_enabled        = true
   tags                           = local.tags
 }
 
@@ -43,9 +43,10 @@ module "frontend" {
   cpu    = var.frontend_cpu
   memory = var.frontend_memory
 
-  container_port = var.frontend_container_port
-  min_replicas   = var.frontend_min_replicas
-  max_replicas   = var.frontend_max_replicas
+  container_port     = var.frontend_container_port
+  min_replicas       = var.frontend_min_replicas
+  max_replicas       = var.frontend_max_replicas
+  health_probe_paths = var.frontend_health_probe_paths
 
   # Environment variables from terraform.tfvars
   # Azure-generated variables remain managed by Terraform.
@@ -65,9 +66,6 @@ module "frontend" {
   ]
 }
 
-
-
-
 module "backend" {
   source = "../../modules/container-app"
 
@@ -84,9 +82,10 @@ module "backend" {
   cpu    = var.backend_cpu
   memory = var.backend_memory
 
-  container_port = var.backend_container_port
-  min_replicas   = var.backend_min_replicas
-  max_replicas   = var.backend_max_replicas
+  container_port     = var.backend_container_port
+  min_replicas       = var.backend_min_replicas
+  max_replicas       = var.backend_max_replicas
+  health_probe_paths = var.backend_health_probe_paths
 
   # ==========================================================
   # Regular environment variables
@@ -102,7 +101,7 @@ module "backend" {
       AZURE_CLIENT_ID           = module.backend_identity.client_id
 
       # Automatically retrieved from Azure Front Door
-      CORS_ORIGINS       = local.frontend_public_url
+      CORS_ORIGINS      = local.frontend_public_url
       FRONTEND_BASE_URL = local.frontend_public_url
     }
   )

@@ -5,8 +5,8 @@ variable "environment_id" { type = string }
 variable "identity_id" { type = string }
 variable "registry_identity_id" { type = string }
 variable "registry_server" {
-  type = string
-  default = null
+  type     = string
+  default  = null
   nullable = true
 }
 variable "image" { type = string }
@@ -14,23 +14,40 @@ variable "cpu" { type = number }
 variable "memory" { type = string }
 variable "container_port" { type = number }
 variable "min_replicas" {
-  type = number
+  type    = number
   default = 1
 }
 variable "max_replicas" {
-  type = number
+  type    = number
   default = 3
 }
 variable "external_enabled" {
-  type = bool
+  type    = bool
   default = true
 }
+variable "health_probe_paths" {
+  description = "Optional HTTP health paths. A null path uses TCP on the container port."
+  type = object({
+    startup   = optional(string)
+    readiness = optional(string)
+    liveness  = optional(string)
+  })
+  default  = {}
+  nullable = false
+
+  validation {
+    condition = alltrue([
+      for path in values(var.health_probe_paths) : path == null ? true : can(regex("^/", path))
+    ])
+    error_message = "Each HTTP health probe path must start with /, or be null for TCP."
+  }
+}
 variable "environment_variables" {
-  type = map(string)
+  type    = map(string)
   default = {}
 }
 variable "secret_environment_variables" {
-  type = map(string)
+  type    = map(string)
   default = {}
 }
 variable "key_vault_secrets" {
@@ -41,6 +58,6 @@ variable "key_vault_secrets" {
   default = {}
 }
 variable "tags" {
-  type = map(string)
+  type    = map(string)
   default = {}
 }

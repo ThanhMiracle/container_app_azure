@@ -8,4 +8,10 @@ resource "azurerm_container_app_environment" "this" {
   log_analytics_workspace_id     = var.log_analytics_workspace_id
   zone_redundancy_enabled        = var.zone_redundancy_enabled
   tags                           = var.tags
+
+  # Use the Consumption workload profile with the delegated infrastructure subnet.
+  workload_profile {
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+  }
 }

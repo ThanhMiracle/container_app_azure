@@ -25,7 +25,7 @@ module "postgresql" {
   storage_mb                   = var.postgres_storage_mb
   backup_retention_days        = var.postgres_backup_retention_days
   geo_redundant_backup_enabled = var.postgres_geo_redundant_backup_enabled
-  high_availability_mode       = null
+  high_availability_mode       = var.postgres_high_availability_mode
   tags                         = local.tags
 
   depends_on = [module.postgres_private_dns]

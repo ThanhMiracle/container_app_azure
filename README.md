@@ -245,6 +245,52 @@ After login, run `az containerapp update --resource-group "$RESOURCE_GROUP" --na
 
 Do not add a GitHub `environment:` to the deployment job without also configuring a matching environment subject in `github_oidc_subjects`.
 
+## Container Apps high availability
+
+The production Container Apps environment enables zone redundancy and uses a
+Consumption workload profile with the existing delegated subnet. Frontend and
+backend each keep at least two replicas running; their maximum counts are three
+and five respectively. Azure distributes replicas across availability zones.
+Additional running replicas increase compute costs.
+
+Startup, readiness, and liveness probes are explicitly configured on each app's
+container port. They default to TCP so bootstrap does not assume application
+HTTP endpoints exist. To check application health rather than just an open port,
+set `frontend_health_probe_paths` and `backend_health_probe_paths` in
+`terraform.tfvars` once the deployed images serve the configured paths. Keep
+liveness independent of temporary database or external-service failures to avoid
+restarting every replica during a dependency outage.
+
+Ensure deployed images listen on `frontend_container_port` (8080) and
+`backend_container_port` (8000). The public hello-world bootstrap image listens
+on 80; when using that image, set both ports to 80 and use a gateway backend probe
+path it serves. Switch ports and health paths together with deployment of the
+real application images.
+
+Zone redundancy is configured at environment creation. Replacing an existing
+non-redundant environment also affects its apps, DNS, and gateway targets. For a
+running deployment, migrate through a second environment and switch traffic
+after checking healthy replicas. Review a fresh plan before applying; do not use
+a plan created before these HA settings were changed.
+
+After deployment, verify the environment setting:
+
+```powershell
+az containerapp env show --resource-group ThanhDT03-Lab --name myapp-prod-cae --query properties.zoneRedundant
+az containerapp show --resource-group ThanhDT03-Lab --name myapp-prod-fe --query properties.template.scale
+az containerapp show --resource-group ThanhDT03-Lab --name myapp-prod-be --query properties.template.scale
+```
+
+Expect zone redundancy to be true, and minimum replica counts to be at least two.
+Check healthy running replicas in the Azure portal and exercise application
+health failures to verify traffic moves to healthy replicas. Persist shared state
+outside individual replicas and implement retries for database connections and
+external calls. This provides Container Apps resilience within one region;
+database, storage, and regional failover need separate configuration.
+
+See Microsoft's [Container Apps reliability guidance](https://learn.microsoft.com/en-us/azure/reliability/reliability-container-apps)
+and [health probe documentation](https://learn.microsoft.com/en-us/azure/container-apps/health-probes).
+
 ## Cost note
 
 `deploy_service_bus = false` by default because private networking for Service Bus uses the Premium tier and can be expensive. The reusable module is included and can be enabled when your application actually needs asynchronous queues.

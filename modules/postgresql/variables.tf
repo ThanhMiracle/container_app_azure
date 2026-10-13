@@ -26,10 +26,24 @@ variable "geo_redundant_backup_enabled" {
   default = false
 }
 variable "high_availability_mode" {
-  type = string
-  default = null
-  nullable = true
+  description = "PostgreSQL HA mode: SameZone, ZoneRedundant, or null to disable HA."
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition = (
+      var.high_availability_mode == null ||
+      contains(
+        ["SameZone", "ZoneRedundant"],
+        var.high_availability_mode
+      )
+    )
+
+    error_message = "high_availability_mode must be SameZone, ZoneRedundant, or null."
+  }
 }
+
 variable "tags" {
   type = map(string)
   default = {}

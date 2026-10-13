@@ -152,3 +152,16 @@ variable "app_gateway" {
     error_message = "Each backend must select container_app frontend/backend, or supply fqdns/ip_addresses."
   }
 }
+
+
+variable "app_gateway_autoscale_min_capacity" {
+  description = "Minimum number of Application Gateway instances."
+  type        = number
+  default     = 2
+}
+
+variable "app_gateway_autoscale_max_capacity" {
+  description = "Maximum number of Application Gateway instances."
+  type        = number
+  default     = 10
+}

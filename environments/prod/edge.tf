@@ -23,8 +23,14 @@ module "application_gateway" {
   resource_group_name = data.azurerm_resource_group.this.name
   location            = var.location
   subnet_id           = module.app_gateway_subnet.id
-  config              = merge(var.app_gateway, { backends = local.app_gateway_backends })
-  tags                = local.tags
+
+  config = merge(var.app_gateway, {
+    backends     = local.app_gateway_backends
+    min_capacity = var.app_gateway_autoscale_min_capacity
+    max_capacity = var.app_gateway_autoscale_max_capacity
+  })
+
+  tags = local.tags
 
   depends_on = [
     module.app_gateway_nsg,
