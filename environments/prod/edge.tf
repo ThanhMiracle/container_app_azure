@@ -45,5 +45,9 @@ module "front_door" {
   endpoint_name       = var.front_door_endpoint_name
   resource_group_name = data.azurerm_resource_group.this.name
   origin_host_name    = module.application_gateway.public_fqdn
-  tags                = local.tags
+
+  multipart_upload_uri_prefixes = var.front_door_upload_uri_prefixes
+  log_multipart_parser_errors   = var.front_door_log_multipart_parser_errors
+
+  tags = local.tags
 }

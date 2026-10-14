@@ -31,6 +31,14 @@ app_gateway_public_dns_label = "myapp-prod-appgw-thanhdt03"
 # Client IP reported by the Azure portal. Update this if your public IP changes.
 storage_allowed_ip_addresses = ["118.70.81.176"]
 
+# The URI exception did not stop the observed multipart parsing blocks.
+# Clear that exception and log only rules 200002/200003 across the policy.
+# All other managed rules retain their existing blocking behavior.
+front_door_upload_uri_prefixes = []
+
+# This override is policy-wide, including all current and future upload routes.
+front_door_log_multipart_parser_errors = true
+
 # GitHub OIDC publisher identity. Change this if the application repository differs.
 github_oidc_subjects = {
   master = "repo:Dev-MT10-SI@330316027/VNN-Agent-orchestrator@1374089373:ref:refs/heads/master"

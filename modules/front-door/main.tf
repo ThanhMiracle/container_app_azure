@@ -75,6 +75,27 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "this" {
     type    = "Microsoft_DefaultRuleSet"
     version = "2.1"
     action  = "Block"
+
+    # The URI exception did not stop parsing-rule anomaly scores for uploads.
+    # This opt-in override is policy-wide and changes only these two rules.
+    dynamic "override" {
+      for_each = var.log_multipart_parser_errors ? ["General"] : []
+      content {
+        rule_group_name = override.value
+
+        rule {
+          rule_id = "200002"
+          enabled = true
+          action  = "Log"
+        }
+
+        rule {
+          rule_id = "200003"
+          enabled = true
+          action  = "Log"
+        }
+      }
+    }
   }
 }
 

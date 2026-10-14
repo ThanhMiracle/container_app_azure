@@ -79,6 +79,20 @@ variable "front_door_endpoint_name" {
   description = "Globally unique Azure Front Door endpoint name."
 }
 
+variable "front_door_upload_uri_prefixes" {
+  description = "Upload API path prefixes allowed past Front Door multipart parsing rules. Covers all current and future IDs beneath each prefix; other WAF rules remain enforced."
+  type        = set(string)
+  default     = []
+  nullable    = false
+}
+
+variable "front_door_log_multipart_parser_errors" {
+  description = "Log multipart parsing errors from rules 200002 and 200003 policy-wide so they do not block legitimate uploads through anomaly scoring."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
 variable "app_gateway_public_dns_label" {
   type        = string
   description = "Unique regional DNS label used by the Application Gateway public IP."

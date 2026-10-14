@@ -15,6 +15,12 @@ app_gateway_public_dns_label = "replace-with-unique-appgw"
 # Add your public IPv4 address for portal access; [] keeps storage private only.
 storage_allowed_ip_addresses = []
 
+# Example: ["/api/products/"] covers review uploads for all product IDs.
+front_door_upload_uri_prefixes = []
+
+# Policy-wide fallback for verified 200002/200003 upload blocks; opt in explicitly.
+front_door_log_multipart_parser_errors = false
+
 github_oidc_subjects = {
   main = "repo:OWNER/REPO:ref:refs/heads/main"
 }
