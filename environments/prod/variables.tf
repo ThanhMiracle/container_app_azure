@@ -63,6 +63,12 @@ variable "storage_account_name" {
   description = "Globally unique Storage Account name."
 }
 
+variable "storage_allowed_ip_addresses" {
+  description = "Public IPv4 addresses or CIDR ranges allowed to access storage. An empty set disables public network access."
+  type        = set(string)
+  default     = []
+}
+
 variable "key_vault_name" {
   type        = string
   description = "Globally unique Key Vault name."

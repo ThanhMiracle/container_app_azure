@@ -17,7 +17,8 @@ module "storage" {
   location                      = var.location
   resource_group_name           = data.azurerm_resource_group.this.name
   replication_type              = var.storage_replication_type
-  public_network_access_enabled = false
+  public_network_access_enabled = length(var.storage_allowed_ip_addresses) > 0
+  allowed_ip_addresses          = var.storage_allowed_ip_addresses
   tags                          = local.tags
 }
 

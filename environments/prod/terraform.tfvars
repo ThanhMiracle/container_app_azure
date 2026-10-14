@@ -28,6 +28,9 @@ postgres_server_name         = "myapp-prod-pg-thanhdt03"
 front_door_endpoint_name     = "myapp-prod-fd-thanhdt03"
 app_gateway_public_dns_label = "myapp-prod-appgw-thanhdt03"
 
+# Client IP reported by the Azure portal. Update this if your public IP changes.
+storage_allowed_ip_addresses = ["118.70.81.176"]
+
 # GitHub OIDC publisher identity. Change this if the application repository differs.
 github_oidc_subjects = {
   master = "repo:Dev-MT10-SI@330316027/VNN-Agent-orchestrator@1374089373:ref:refs/heads/master"

@@ -12,6 +12,12 @@ resource "azurerm_storage_account" "this" {
   shared_access_key_enabled       = false
   default_to_oauth_authentication = true
 
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["None"]
+    ip_rules       = var.allowed_ip_addresses
+  }
+
   blob_properties {
     versioning_enabled = true
 

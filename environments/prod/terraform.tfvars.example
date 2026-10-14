@@ -12,6 +12,9 @@ postgres_server_name         = "replace-with-unique-pg"
 front_door_endpoint_name     = "replace-with-unique-fd"
 app_gateway_public_dns_label = "replace-with-unique-appgw"
 
+# Add your public IPv4 address for portal access; [] keeps storage private only.
+storage_allowed_ip_addresses = []
+
 github_oidc_subjects = {
   main = "repo:OWNER/REPO:ref:refs/heads/main"
 }
